@@ -1,3 +1,4 @@
+#[macro_use]
 use clap::{App, Arg};
 
 mod caesar;
@@ -10,7 +11,7 @@ const ARG_NAME_OUTPUT: &'static str = "output";
 
 fn main() {
     let matches = App::new("Caesar Cipher Tool")
-        .version("0.1")
+        .version(clap::crate_version!())
         .author("José Duarte <jmg.duarte@campus.fct.unl.pt>")
         .about("Tool to (de)cipher text using the Caesar Cipher")
         .args(&[
