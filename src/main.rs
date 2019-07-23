@@ -1,4 +1,3 @@
-#[macro_use]
 use clap::{App, Arg};
 
 mod caesar;
@@ -8,11 +7,12 @@ const ARG_NAME_INPUT_TEXT: &'static str = "text";
 const ARG_NAME_ROTATION: &'static str = "rotation";
 const ARG_NAME_DECIPHER: &'static str = "decipher";
 const ARG_NAME_OUTPUT: &'static str = "output";
+const ARG_NAME_INPUT: &'static str = "input";
 
 fn main() {
     let matches = App::new("Caesar Cipher Tool")
         .version(clap::crate_version!())
-        .author("José Duarte <jmg.duarte@campus.fct.unl.pt>")
+        .author(clap::crate_authors!())
         .about("Tool to (de)cipher text using the Caesar Cipher")
         .args(&[
             Arg::with_name(ARG_NAME_INPUT_TEXT)
@@ -30,17 +30,25 @@ fn main() {
                 .help("Write result to a file")
                 .short("o")
                 .takes_value(true),
+            Arg::with_name(ARG_NAME_INPUT)
+                .help("Read text from file")
+                .short("i"),
         ])
         .get_matches();
 
-    let text = matches.value_of(ARG_NAME_INPUT_TEXT).unwrap();
+    let text: String = if matches.is_present(ARG_NAME_INPUT) {
+        io::read_input(matches.value_of(ARG_NAME_INPUT_TEXT).unwrap()).expect("Error reading file")
+    } else {
+        matches.value_of(ARG_NAME_INPUT_TEXT).unwrap().to_string()
+    };
+
     let rotation = matches.value_of(ARG_NAME_ROTATION).unwrap();
     let rot = rotation.parse::<u8>().unwrap_or_default();
 
     let output = if matches.is_present(ARG_NAME_DECIPHER) {
-        caesar::decipher(text, rot)
+        caesar::decipher(&text, rot)
     } else {
-        caesar::cipher(text, rot)
+        caesar::cipher(&text, rot)
     };
 
     if matches.is_present(ARG_NAME_OUTPUT) {
