@@ -15,13 +15,12 @@ fn main() {
         .author(clap::crate_authors!())
         .about("Tool to (de)cipher text using the Caesar Cipher")
         .args(&[
-            Arg::with_name(ARG_NAME_INPUT_TEXT)
-                .help("Text for encoding/decoding")
-                .required(true)
-                .index(1),
             Arg::with_name(ARG_NAME_ROTATION)
                 .help("Rotation value that should be used in the process")
                 .required(true)
+                .index(1),
+            Arg::with_name(ARG_NAME_INPUT_TEXT)
+                .help("Text for encoding/decoding")
                 .index(2),
             Arg::with_name(ARG_NAME_DECIPHER)
                 .help("Decipher the input text")
@@ -32,14 +31,20 @@ fn main() {
                 .takes_value(true),
             Arg::with_name(ARG_NAME_INPUT)
                 .help("Read text from file")
-                .short("i"),
+                .short("i")
+                .requires(ARG_NAME_INPUT_TEXT),
         ])
         .get_matches();
 
-    let text: String = if matches.is_present(ARG_NAME_INPUT) {
-        io::read_input(matches.value_of(ARG_NAME_INPUT_TEXT).unwrap()).expect("Error reading file")
+    let text: String = if matches.is_present(ARG_NAME_INPUT_TEXT) {
+        if matches.is_present(ARG_NAME_INPUT) {
+            io::read_input(matches.value_of(ARG_NAME_INPUT_TEXT).unwrap())
+                .expect("Error reading file")
+        } else {
+            matches.value_of(ARG_NAME_INPUT_TEXT).unwrap().to_string()
+        }
     } else {
-        matches.value_of(ARG_NAME_INPUT_TEXT).unwrap().to_string()
+        io::read_stdin().unwrap()
     };
 
     let rotation = matches.value_of(ARG_NAME_ROTATION).unwrap();
