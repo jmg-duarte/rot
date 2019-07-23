@@ -26,7 +26,6 @@ pub fn cipher(text: &str, rotation: u8) -> String {
         } else {
             letter
         };
-        println!("idx: {}\tletter: {}\tres[idx]: {}", idx, letter, res[idx]);
     }
 
     res.into_iter().collect()
@@ -58,7 +57,6 @@ pub fn decipher(text: &str, rotation: u8) -> String {
         } else {
             letter
         };
-        println!("idx: {}\tletter: {}\tres[idx]: {}", idx, letter, res[idx]);
     }
 
     res.into_iter().collect()
