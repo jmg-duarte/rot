@@ -61,3 +61,11 @@ pub fn decipher(text: &str, rotation: u8) -> String {
 
     res.into_iter().collect()
 }
+
+pub fn brute_force(text: &str) -> Vec<String> {
+    let mut res : Vec<String> = Vec::new();
+    for rot in 1..26 {
+        res.push(decipher(text, rot));
+    }
+    res
+}
