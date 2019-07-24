@@ -11,28 +11,42 @@ fn main() {
         .author(clap::crate_authors!())
         .get_matches();
 
+    let text = get_text(&matches);
+    let output = process_text(&matches, &text);
+
+    if matches.is_present("output") {
+        let file = matches.value_of("output").unwrap();
+        io::write_output(file, &output).expect("Error writing file");
+    } else {
+        println!("{}", output);
+    };
+}
+
+fn get_text(matches: &clap::ArgMatches) -> String {
     let (input, file, stdin) = (
         matches.is_present("input"),
         matches.is_present("file"),
         matches.is_present("stdin"),
     );
 
-    let text: String = match (input, file, stdin) {
+    match (input, file, stdin) {
         (true, _, _) => {
             io::read_input(matches.value_of("input").unwrap()).expect("Error reading file")
         }
         (_, true, _) => matches.value_of("input").unwrap().to_string(),
         (_, _, true) => io::read_stdin().unwrap(),
         (_, _, _) => unreachable!(),
-    };
+    }
+}
 
+fn process_text(matches: &clap::ArgMatches, text: &str) -> String {
     let (bforce, cipher, decipher) = (
         matches.is_present("brutef"),
         matches.is_present("cipher"),
         matches.is_present("decipher"),
     );
 
-    let output = match (bforce, cipher, decipher) {
+    match (bforce, cipher, decipher) {
         (true, _, _) => {
             let r: Vec<u8> = (1..26).collect();
             caesar::decipher_n(&text, &r)
@@ -47,12 +61,5 @@ fn main() {
         }
         (_, _, _) => unreachable!(),
     }
-    .join("\n");
-
-    if matches.is_present("output") {
-        let file = matches.value_of("output").unwrap();
-        io::write_output(file, &output).expect("Error writing file");
-    } else {
-        println!("{}", output);
-    };
+    .join("\n")
 }
