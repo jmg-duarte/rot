@@ -30,34 +30,34 @@ fn get_text(matches: &clap::ArgMatches) -> String {
     );
 
     match (input, file, stdin) {
-        (true, _, _) => {
-            io::read_input(matches.value_of("input").unwrap()).expect("Error reading file")
+        (true, _, _) => matches.value_of("input").unwrap().to_string(),
+        (_, true, _) => {
+            io::read_input(matches.value_of("file").unwrap()).expect("Error reading file")
         }
-        (_, true, _) => matches.value_of("input").unwrap().to_string(),
         (_, _, true) => io::read_stdin().unwrap(),
         (_, _, _) => unreachable!(),
     }
 }
 
 fn process_text(matches: &clap::ArgMatches, text: &str) -> String {
-    let (bforce, cipher, decipher) = (
+    let (brutef, cipher, decipher) = (
         matches.is_present("brutef"),
         matches.is_present("cipher"),
         matches.is_present("decipher"),
     );
 
-    match (bforce, cipher, decipher) {
+    match (brutef, cipher, decipher) {
         (true, _, _) => {
             let r: Vec<u8> = (1..26).collect();
             caesar::decipher_n(&text, &r)
         }
         (_, true, _) => {
-            let v = clap::values_t!(matches, "decipher", u8).unwrap();
-            caesar::decipher_n(&text, &v)
-        }
-        (_, _, true) => {
             let v = clap::values_t!(matches, "cipher", u8).unwrap();
             caesar::cipher_n(&text, &v)
+        }
+        (_, _, true) => {
+            let v = clap::values_t!(matches, "decipher", u8).unwrap();
+            caesar::decipher_n(&text, &v)
         }
         (_, _, _) => unreachable!(),
     }

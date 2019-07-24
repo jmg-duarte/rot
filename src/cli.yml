@@ -8,11 +8,13 @@ args:
       help: Text to (de)cipher
       short: t
       index: 1
+      takes_value: true
 
   - file:
       help: Read [input] as a file
       short: f
       long: file
+      takes_value: true
 
   - stdin:
       help: Read input from "stdin"
