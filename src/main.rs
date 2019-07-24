@@ -1,91 +1,64 @@
-use clap::{App, Arg};
+use clap::values_t;
+use clap::App;
 
 mod caesar;
 mod io;
 
-const ARG_NAME_INPUT_TEXT: &'static str = "text";
-const ARG_NAME_ROTATION: &'static str = "rotation";
-const ARG_NAME_DECIPHER: &'static str = "decipher";
-const ARG_NAME_OUTPUT: &'static str = "output";
-const ARG_NAME_INPUT: &'static str = "input";
-const ARG_NAME_BLIND_BRUTE_FORCE: &'static str = "bbf";
-const ARG_NAME_TEXT_EXPLICIT: &'static str = "explicit";
-
 fn main() {
-    let matches = App::new("Caesar Cipher Tool")
+    let yml = clap::load_yaml!("cli.yml");
+    let matches = App::from_yaml(yml)
         .version(clap::crate_version!())
         .author(clap::crate_authors!())
-        .about("Tool to (de)cipher text using the Caesar Cipher")
-        .args(&[
-            Arg::with_name(ARG_NAME_ROTATION)
-                .help("Rotation value that should be used in the process")
-                //.required_unless(ARG_NAME_BLIND_BRUTE_FORCE)
-                .index(1),
-            Arg::with_name(ARG_NAME_INPUT_TEXT)
-                .help("Text for encoding/decoding")
-                .index(2),
-            Arg::with_name(ARG_NAME_DECIPHER)
-                .help("Decipher the input text")
-                .short("d"),
-            Arg::with_name(ARG_NAME_OUTPUT)
-                .help("Write result to a file")
-                .short("o")
-                .takes_value(true),
-            Arg::with_name(ARG_NAME_INPUT)
-                .help("Read text from file")
-                .short("i")
-                .requires(ARG_NAME_INPUT_TEXT),
-            Arg::with_name(ARG_NAME_BLIND_BRUTE_FORCE)
-                .help("Brute force all possible combinations")
-                .takes_value(false)
-                .long("blindf")
-                .short("b")
-                .conflicts_with_all(&[ARG_NAME_ROTATION, ARG_NAME_DECIPHER])
-                .requires(ARG_NAME_TEXT_EXPLICIT),
-            Arg::with_name(ARG_NAME_TEXT_EXPLICIT)
-                .help("Explicitly pass some text")
-                //.requires(ARG_NAME_BLIND_BRUTE_FORCE)
-                .conflicts_with(ARG_NAME_INPUT_TEXT)
-                .short("e")
-                .takes_value(true)
-                .number_of_values(1),
-        ])
         .get_matches();
 
-    let text: String = if matches.is_present(ARG_NAME_TEXT_EXPLICIT) {
-        matches
-            .value_of(ARG_NAME_TEXT_EXPLICIT)
-            .unwrap()
-            .to_string()
-    } else if matches.is_present(ARG_NAME_INPUT_TEXT) {
-        if matches.is_present(ARG_NAME_INPUT) {
-            io::read_input(matches.value_of(ARG_NAME_INPUT_TEXT).unwrap())
-                .expect("Error reading file")
-        } else {
-            matches.value_of(ARG_NAME_INPUT_TEXT).unwrap().to_string()
-        }
-    } else {
-        io::read_stdin().unwrap()
-    };
+    let text = get_text(&matches);
+    let output = process_text(&matches, &text);
 
-    let output = if matches.is_present(ARG_NAME_BLIND_BRUTE_FORCE) {
-        caesar::brute_force(&text).join("\n")
-    } else {
-        let rotation = matches.value_of(ARG_NAME_ROTATION).unwrap();
-        let rot = rotation.parse::<u8>().unwrap_or_default();
-
-        if matches.is_present(ARG_NAME_DECIPHER) {
-            caesar::decipher(&text, rot)
-        } else {
-            caesar::cipher(&text, rot)
-        }
-    };
-
-    if matches.is_present(ARG_NAME_OUTPUT) {
-        if let Some(file) = matches.value_of(ARG_NAME_OUTPUT) {
-            io::write_output(file, &output).unwrap();
-        }
+    if matches.is_present("output") {
+        let file = matches.value_of("output").unwrap();
+        io::write_output(file, &output).expect("Error writing file");
     } else {
         println!("{}", output);
+    };
+}
+
+fn get_text(matches: &clap::ArgMatches) -> String {
+    let (input, file, stdin) = (
+        matches.is_present("input"),
+        matches.is_present("file"),
+        matches.is_present("stdin"),
+    );
+
+    match (input, file, stdin) {
+        (true, _, _) => matches.value_of("input").unwrap().to_string(),
+        (_, true, _) => {
+            io::read_input(matches.value_of("file").unwrap()).expect("Error reading file")
+        }
+        (_, _, true) | (false, false, false) => io::read_stdin().unwrap(),
     }
+}
+
+fn process_text(matches: &clap::ArgMatches, text: &str) -> String {
+    let (brutef, cipher, decipher) = (
+        matches.is_present("brutef"),
+        matches.is_present("cipher"),
+        matches.is_present("decipher"),
+    );
+
+    match (brutef, cipher, decipher) {
+        (true, _, _) => {
+            let r: Vec<u8> = (1..26).collect();
+            caesar::decipher_n(&text, &r)
+        }
+        (_, true, _) => {
+            let v = clap::values_t!(matches, "cipher", u8).unwrap();
+            caesar::cipher_n(&text, &v)
+        }
+        (_, _, true) => {
+            let v = clap::values_t!(matches, "decipher", u8).unwrap();
+            caesar::decipher_n(&text, &v)
+        }
+        (_, _, _) => unreachable!(),
+    }
+    .join("\n")
 }
