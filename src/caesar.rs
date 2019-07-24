@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-pub fn cipher(text: &str, rotation: u8) -> String {
+fn cipher(text: &str, rotation: u8) -> String {
     let lower_letters: HashSet<char> = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
         's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
@@ -31,7 +31,15 @@ pub fn cipher(text: &str, rotation: u8) -> String {
     res.into_iter().collect()
 }
 
-pub fn decipher(text: &str, rotation: u8) -> String {
+pub fn cipher_n(text: &str, rotations: &[u8]) -> Vec<String> {
+    let mut res = Vec::new();
+    for &r in rotations {
+       res.push(cipher(text, r)) 
+    }
+    res
+}
+
+fn decipher(text: &str, rotation: u8) -> String {
     let lower_letters: HashSet<char> = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
         's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
@@ -60,4 +68,12 @@ pub fn decipher(text: &str, rotation: u8) -> String {
     }
 
     res.into_iter().collect()
+}
+
+pub fn decipher_n(text: &str, rotations: &[u8]) -> Vec<String> {
+    let mut res = Vec::new();
+    for &r in rotations {
+       res.push(decipher(text, r)) 
+    }
+    res
 }

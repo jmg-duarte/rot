@@ -1,66 +1,58 @@
-use clap::{App, Arg};
+use clap::values_t;
+use clap::App;
 
 mod caesar;
 mod io;
 
-const ARG_NAME_INPUT_TEXT: &'static str = "text";
-const ARG_NAME_ROTATION: &'static str = "rotation";
-const ARG_NAME_DECIPHER: &'static str = "decipher";
-const ARG_NAME_OUTPUT: &'static str = "output";
-const ARG_NAME_INPUT: &'static str = "input";
-
 fn main() {
-    let matches = App::new("Caesar Cipher Tool")
+    let yml = clap::load_yaml!("cli.yml");
+    let matches = App::from_yaml(yml)
         .version(clap::crate_version!())
         .author(clap::crate_authors!())
-        .about("Tool to (de)cipher text using the Caesar Cipher")
-        .args(&[
-            Arg::with_name(ARG_NAME_ROTATION)
-                .help("Rotation value that should be used in the process")
-                .required(true)
-                .index(1),
-            Arg::with_name(ARG_NAME_INPUT_TEXT)
-                .help("Text for encoding/decoding")
-                .index(2),
-            Arg::with_name(ARG_NAME_DECIPHER)
-                .help("Decipher the input text")
-                .short("d"),
-            Arg::with_name(ARG_NAME_OUTPUT)
-                .help("Write result to a file")
-                .short("o")
-                .takes_value(true),
-            Arg::with_name(ARG_NAME_INPUT)
-                .help("Read text from file")
-                .short("i")
-                .requires(ARG_NAME_INPUT_TEXT),
-        ])
         .get_matches();
 
-    let text: String = if matches.is_present(ARG_NAME_INPUT_TEXT) {
-        if matches.is_present(ARG_NAME_INPUT) {
-            io::read_input(matches.value_of(ARG_NAME_INPUT_TEXT).unwrap())
-                .expect("Error reading file")
-        } else {
-            matches.value_of(ARG_NAME_INPUT_TEXT).unwrap().to_string()
+    let (input, file, stdin) = (
+        matches.is_present("input"),
+        matches.is_present("file"),
+        matches.is_present("stdin"),
+    );
+
+    let text: String = match (input, file, stdin) {
+        (true, _, _) => {
+            io::read_input(matches.value_of("input").unwrap()).expect("Error reading file")
         }
-    } else {
-        io::read_stdin().unwrap()
+        (_, true, _) => matches.value_of("input").unwrap().to_string(),
+        (_, _, true) => io::read_stdin().unwrap(),
+        (_, _, _) => unreachable!(),
     };
 
-    let rotation = matches.value_of(ARG_NAME_ROTATION).unwrap();
-    let rot = rotation.parse::<u8>().unwrap_or_default();
+    let (bforce, cipher, decipher) = (
+        matches.is_present("brutef"),
+        matches.is_present("cipher"),
+        matches.is_present("decipher"),
+    );
 
-    let output = if matches.is_present(ARG_NAME_DECIPHER) {
-        caesar::decipher(&text, rot)
-    } else {
-        caesar::cipher(&text, rot)
-    };
-
-    if matches.is_present(ARG_NAME_OUTPUT) {
-        if let Some(file) = matches.value_of(ARG_NAME_OUTPUT) {
-            io::write_output(file, &output).unwrap();
+    let output = match (bforce, cipher, decipher) {
+        (true, _, _) => {
+            let r: Vec<u8> = (1..26).collect();
+            caesar::decipher_n(&text, &r)
         }
+        (_, true, _) => {
+            let v = clap::values_t!(matches, "decipher", u8).unwrap();
+            caesar::decipher_n(&text, &v)
+        }
+        (_, _, true) => {
+            let v = clap::values_t!(matches, "cipher", u8).unwrap();
+            caesar::cipher_n(&text, &v)
+        }
+        (_, _, _) => unreachable!(),
+    }
+    .join("\n");
+
+    if matches.is_present("output") {
+        let file = matches.value_of("output").unwrap();
+        io::write_output(file, &output).expect("Error writing file");
     } else {
         println!("{}", output);
-    }
+    };
 }

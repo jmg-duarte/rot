@@ -1,0 +1,56 @@
+name: rot
+
+settings:
+  - ArgRequiredElseHelp
+
+args:
+  - input:
+      help: Text to (de)cipher
+      short: t
+      index: 1
+
+  - file:
+      help: Read [input] as a file
+      short: f
+      long: file
+
+  - stdin:
+      help: Read input from "stdin"
+      long: stdin
+      conflicts_with: 
+        - input
+        - file
+
+  - output:
+      help: Define an output file
+      short: o
+      long: output
+      takes_value: true
+
+  - cipher:
+      help: Cipher input with the given rotation(s)
+      short: c
+      long: cipher
+      takes_value: true
+      multiple: true
+      use_delimiter: true
+  
+  - decipher:
+      help: Decipher input with the given rotation(s)
+      short: d
+      long: decipher
+      takes_value: true
+      multiple: true
+      use_delimiter: true
+
+  - brutef:
+      help: Brute force all possible rotations
+      short: b
+      long: brutef
+
+groups:
+  - actions:
+      args:
+        - cipher
+        - decipher
+        - brutef
