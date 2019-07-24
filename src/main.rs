@@ -34,8 +34,7 @@ fn get_text(matches: &clap::ArgMatches) -> String {
         (_, true, _) => {
             io::read_input(matches.value_of("file").unwrap()).expect("Error reading file")
         }
-        (_, _, true) => io::read_stdin().unwrap(),
-        (_, _, _) => unreachable!(),
+        (_, _, true) | (false, false, false) => io::read_stdin().unwrap(),
     }
 }
 
