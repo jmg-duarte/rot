@@ -30,20 +30,22 @@ args:
       takes_value: true
 
   - cipher:
-      help: Cipher input with the given rotation(s)
+      help: Cipher input with the given rotation(s) - using equals when declaring the flag is required
       short: c
       long: cipher
       takes_value: true
       multiple: true
       use_delimiter: true
-  
+      # require_equals: true
+
   - decipher:
-      help: Decipher input with the given rotation(s)
+      help: Decipher input with the given rotation(s) - using equals when declaring the flag is required
       short: d
       long: decipher
       takes_value: true
       multiple: true
       use_delimiter: true
+      # require_equals: true
 
   - brutef:
       help: Brute force all possible rotations
