@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 fn cipher(text: &str, rotation: u8) -> String {
     let mut res: Vec<char> = vec![' '; text.len()];
+
     for (idx, letter) in text.chars().enumerate() {
-        res[idx] = if letter >= 'A' && letter <= 'Z' {
+        res[idx] = if letter <= 'Z' && letter >= 'A' {
             (((((letter as u8) - ('A' as u8)) + rotation) % 26) + ('A' as u8)) as char
-        } else if letter >= 'a' && letter <= 'z' {
+        } else if letter <= 'z' && letter >= 'a' {
             (((((letter as u8) - ('a' as u8)) + rotation) % 26) + ('a' as u8)) as char
         } else {
             letter
@@ -25,10 +24,11 @@ pub fn cipher_n(text: &str, rotations: &[u8]) -> Vec<String> {
 
 fn decipher(text: &str, rotation: u8) -> String {
     let mut res: Vec<char> = vec![' '; text.len()];
+
     for (idx, letter) in text.chars().enumerate() {
-        res[idx] = if letter >= 'A' && letter <= 'Z' {
+        res[idx] = if letter <= 'Z' && letter >= 'A' {
             (((((letter as u8) - ('A' as u8)) + (26 - rotation)) % 26) + ('A' as u8)) as char
-        } else if letter >= 'a' && letter <= 'z' {
+        } else if letter <= 'z' && letter >= 'a' {
             (((((letter as u8) - ('a' as u8)) + (26 - rotation)) % 26) + ('a' as u8)) as char
         } else {
             letter
