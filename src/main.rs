@@ -1,4 +1,3 @@
-
 use clap::App;
 
 mod cli;
